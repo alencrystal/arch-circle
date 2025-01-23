@@ -84,6 +84,42 @@ def get_closest_enemy():
         return None
     return min(enemies, key=lambda e: ((e["x"] - circle_x) ** 2 + (e["y"] - circle_y) ** 2))
 
+# Funzione per mostrare la schermata di game over
+def game_over_screen():
+    global score, circle_x, circle_y, player_health, enemies, bullets, time_still, spawn_interval
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                # Resetta il gioco
+                circle_x = WINDOW_WIDTH // 2
+                circle_y = WINDOW_HEIGHT // 2
+                player_health = max_health
+                enemies = []
+                bullets = []
+                time_still = 0
+                spawn_interval = 1000
+                return
+
+        # Mostra il messaggio di Game Over
+        screen.fill(BLACK)
+        game_over_text = font.render("GAME OVER", True, WHITE)
+        score_text = font_small.render(f"Score: {score}", True, WHITE)
+        restart_text = font_small.render("Press 'R' to Restart", True, WHITE)
+
+        game_over_rect = game_over_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 - 50))
+        score_rect = score_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+        restart_rect = restart_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 50))
+
+        screen.blit(game_over_text, game_over_rect)
+        screen.blit(score_text, score_rect)
+        screen.blit(restart_text, restart_rect)
+
+        pygame.display.flip()
+
 # Loop principale del gioco
 while True:
     for event in pygame.event.get():
@@ -169,15 +205,7 @@ while True:
                 break
 
     if player_health <= 0:
-        # Mostra il messaggio di Game Over
-        screen.fill(BLACK)
-        game_over_text = font.render("GAME OVER", True, WHITE)
-        text_rect = game_over_text.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
-        screen.blit(game_over_text, text_rect)
-        pygame.display.flip()
-        pygame.time.wait(3000)
-        pygame.quit()
-        sys.exit()
+        game_over_screen()
 
     # Disegna lo sfondo
     screen.fill(BLACK)
@@ -188,6 +216,7 @@ while True:
     # Disegna i nemici
     for enemy in enemies:
         pygame.draw.circle(screen, RED, (int(enemy["x"]), int(enemy["y"])), enemy_radius)
+
 
     # Disegna i proiettili
     for bullet in bullets:
