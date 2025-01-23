@@ -7,11 +7,11 @@ pygame.init()
 WINDOW_WIDTH = 800 # Dimensioni della finestra di gioco
 WINDOW_HEIGHT = 600
 
-GREEN = (35, 101, 51)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-WHITE = (255, 255, 255)
-LIGHT_GREEN = (144, 238, 144)  
+GREEN = (35, 101, 51)           #player
+BLACK = (0, 0, 0)               #sfondo
+RED = (255, 0, 0)               #nemici
+WHITE = (255, 255, 255)        #scritte
+LIGHT_GREEN = (144, 238, 144)  #barra della vita
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # Imposta la finestra di gioco
 pygame.display.set_caption("arch-circle")
