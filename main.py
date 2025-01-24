@@ -48,6 +48,11 @@ bullet_interval = 980
 bullets = []
 
 score = 0
+experience = 0
+enemies_killed = 0  # Contatore dei nemici uccisi per il prossimo "Level Up"
+
+show_ui = False  # Di default, l'interfaccia è nascosta
+
 font_small = pygame.font.Font(None, 36)
 
 font = pygame.font.Font(None, 74) # Font per il messaggio di game over
@@ -143,6 +148,10 @@ while True:                                 # Loop principale del gioco
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+            show_ui = not show_ui  # Alterna la visibilità dell'interfaccia
+
 
     
     keys = pygame.key.get_pressed()         # Ottieni gli input da tastiera
@@ -235,9 +244,13 @@ while True:                                 # Loop principale del gioco
                     if enemy["hp"] <= 0:
                         enemies.remove(enemy)
                         score += 3  # 3 punti per i nemici blu
+                        experience += 1  # Guadagna 1 punto esperienza per nemici rossi
+                        enemies_killed += 1
                 else:
                     enemies.remove(enemy)
                     score += 1
+                    experience += 1  # Guadagna 1 punto esperienza per nemici rossi
+                    enemies_killed += 1
                 hit = True
                 break
         if hit:
@@ -245,6 +258,38 @@ while True:                                 # Loop principale del gioco
 
 
 
+    # Controlla se è necessario un Level Up
+    if enemies_killed >= 15:
+        enemies_killed = 0  # Resetta il contatore per il prossimo Level Up
+        player_health = min(max_health, player_health + 2)  # Cura di 2 punti, senza superare il massimo
+        max_health += 1  # Incrementa gli HP massimi di 1
+        
+        # Mostra il messaggio "Level Up"
+        level_up_text = font.render("LEVEL UP!", True, WHITE)
+        level_up_rect = level_up_text.get_rect(center=(circle_x, circle_y - default_radius - 30))
+
+        # Pausa momentanea del gioco
+        pause_timer = pygame.time.get_ticks()
+        pause_duration = 1500 
+        while pygame.time.get_ticks() - pause_timer < pause_duration:
+            screen.fill(BLACK)
+            pygame.draw.circle(screen, GREEN, (circle_x, circle_y), default_radius)  # Disegna il personaggio
+            screen.blit(level_up_text, level_up_rect)  # Disegna "Level Up"
+            
+            # Disegna il punteggio e la barra della salute
+            score_text = font_small.render(f"Score: {score}", True, WHITE)
+            exp_text = font_small.render(f"EXP: {experience}", True, WHITE)
+            screen.blit(score_text, (10, 10))
+            screen.blit(exp_text, (10, 50))
+            
+            # Disegna nemici e proiettili per evitare un cambiamento brusco
+            for enemy in enemies:
+                color = RED if enemy["type"] == "red" else (0, 0, 255)
+                pygame.draw.circle(screen, color, (int(enemy["x"]), int(enemy["y"])), enemy_radius)
+            for bullet in bullets:
+                pygame.draw.circle(screen, WHITE, (int(bullet["x"]), int(bullet["y"])), bullet_radius)
+
+            pygame.display.flip()
 
 
 
@@ -271,11 +316,22 @@ while True:                                 # Loop principale del gioco
     pygame.draw.rect(screen, RED, (circle_x - health_bar_width // 2, circle_y + default_radius + 10, health_bar_width, health_bar_height))
     pygame.draw.rect(screen, LIGHT_GREEN, (circle_x - health_bar_width // 2, circle_y + default_radius + 10, current_health_bar_width, health_bar_height))
 
-    score_text = font_small.render(f"Score: {score}", True, WHITE)                                       # Disegna il punteggio
-    screen.blit(score_text, (10, 10))
+    score_text = font_small.render(f"Score: {score}", True, WHITE)
+    score_rect = score_text.get_rect(topright=(WINDOW_WIDTH - 10, 10))
+    screen.blit(score_text, score_rect)
 
-    spawn_text = font_small.render(f"S.P.: {spawn_interval}", True, WHITE)                                  # Disegna l'intervallo di spawn
-    screen.blit(spawn_text, (WINDOW_WIDTH - 150, 10))
+    if show_ui:
+        hp_text = font_small.render(f"HP: {player_health}/{max_health}", True, WHITE)
+        screen.blit(hp_text, (10, 10))  # Posiziona il testo nella UI
+        
+        # Disegna l'EXP
+        exp_text = font_small.render(f"exp: {experience}", True, WHITE)
+        screen.blit(exp_text, (10, 50))
+        
+        # Disegna l'intervallo di spawn
+        spawn_text = font_small.render(f"si: {spawn_interval}", True, WHITE)
+        screen.blit(spawn_text, (10, 90))
+
 
     pygame.display.flip()                                                                               # Aggiorna la finestra
     clock.tick(60)                                                                                       # Limita il frame rate a 60 FPS
