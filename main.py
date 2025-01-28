@@ -33,8 +33,8 @@ player_attack = 1  # Danno del giocatore per colpo
 enemy_radius = 10
 red_enemy_speed = 1.5  
 spawn_timer = 0
-spawn_interval = 1000  
-min_spawn_interval = 200  
+spawn_interval = 1200  
+min_spawn_interval = 250  
 spawn_delay_timer = 0
 time_still = 0  
 enemies = []
@@ -46,7 +46,7 @@ blue_enemy_speed = 1.0  # Velocità dei nemici blu (più lenti dei rossi)
 bullet_radius = 5   
 bullet_speed = 7 
 bullet_timer = 0
-bullet_interval = 980  
+bullet_interval = 1000  
 bullets = []
 
 score = 0
@@ -132,6 +132,73 @@ def game_over_screen():
         screen.blit(score_text, score_rect)
         screen.blit(restart_text, restart_rect)
         pygame.display.flip()
+
+def level_up_menu():
+    global player_health, max_health, bullet_interval, spawn_interval
+
+    # Configura i buff
+    buffs = [
+        {"name": "Heal", "action": lambda: heal_player(5)},  # Cura
+        {"name": "Max HP", "action": lambda: increase_max_health(2)},  # Incremento salute massima
+        {"name": "Faster Reload", "action": lambda: reduce_bullet_interval(50)},  # Riduzione bullet_interval
+    ]
+
+    # Disegna i tre buff come rettangoli
+    options_rects = []
+    for i, buff in enumerate(buffs):
+        rect = pygame.Rect((WINDOW_WIDTH // 4 * (i + 1) - 50, WINDOW_HEIGHT // 2 - 50, 100, 100))
+        options_rects.append(rect)
+
+    selected_option = 0  # Tiene traccia dell'opzione selezionata
+
+    # Mostra il menu finché non si sceglie un buff
+    while True:
+        screen.fill(BLACK)
+
+        # Disegna i rettangoli con i nomi dei buff
+        for i, rect in enumerate(options_rects):
+            color = LIGHT_GREEN if i == selected_option else BROWN  # Cambia il colore in base alla selezione
+            pygame.draw.rect(screen, color, rect)
+            buff_text = font_small.render(buffs[i]["name"], True, WHITE)
+            text_rect = buff_text.get_rect(center=rect.center)
+            screen.blit(buff_text, text_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    selected_option = (selected_option - 1) % len(buffs)
+                elif event.key == pygame.K_RIGHT:
+                    selected_option = (selected_option + 1) % len(buffs)
+                elif event.key == pygame.K_RETURN:  # Invio per confermare la selezione
+                    buffs[selected_option]["action"]()
+                    return
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Click sinistro
+                for i, rect in enumerate(options_rects):
+                    if rect.collidepoint(event.pos):
+                        buffs[i]["action"]()
+                        return
+    global player_health, max_health, bullet_interval
+
+
+
+def heal_player(amount):
+    global player_health, max_health
+    player_health = min(max_health, player_health + amount)  # Cura fino al massimo
+
+def increase_max_health(amount):
+    global player_health, max_health
+    max_health += amount
+    
+
+def reduce_bullet_interval(amount):
+    global bullet_interval
+    bullet_interval = max(200, bullet_interval - amount)  # Limita il bullet_interval minimo
+
 
 # ============================================================
 # MAIN GAME LOOP
@@ -241,27 +308,9 @@ while True:
     # Level Up system
     if enemies_killed >= 15:
         enemies_killed = 0
-        max_health += 1
-        bullet_interval -= 5
-        player_health = min(max_health, player_health + 2)
+        level_up_menu()  # Mostra il menu per la scelta del buff
+
         
-
-        # Mostra Level Up
-        level_up_text = font.render("LEVEL UP!", True, WHITE)
-        level_up_rect = level_up_text.get_rect(center=(circle_x, circle_y - default_radius - 30))
-        pause_timer = pygame.time.get_ticks()
-        pause_duration = 1500
-        while pygame.time.get_ticks() - pause_timer < pause_duration:
-            screen.fill(BLACK)
-            pygame.draw.circle(screen, GREEN, (circle_x, circle_y), default_radius)
-            screen.blit(level_up_text, level_up_rect)
-            for enemy in enemies:
-                color = RED if enemy["type"] == "red" else (0, 0, 255)
-                pygame.draw.circle(screen, color, (int(enemy["x"]), int(enemy["y"])), enemy_radius)
-            for bullet in bullets:
-                pygame.draw.circle(screen, WHITE, (int(bullet["x"]), int(bullet["y"])), bullet_radius)
-            pygame.display.flip()
-
     if player_health <= 0:
         game_over_screen()
 
