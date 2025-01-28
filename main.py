@@ -34,7 +34,7 @@ enemy_radius = 10
 red_enemy_speed = 1.5  
 spawn_timer = 0
 spawn_interval = 1200  
-min_spawn_interval = 250  
+min_spawn_interval = 200  
 spawn_delay_timer = 0
 time_still = 0  
 enemies = []
@@ -110,7 +110,7 @@ def game_over_screen():
                 enemies = []
                 bullets = []
                 time_still = 0
-                spawn_interval = 1000
+                spawn_interval = 1200
                 
                 score = 0
                 enemies_killed = 0
@@ -134,7 +134,7 @@ def game_over_screen():
         pygame.display.flip()
 
 def level_up_menu():
-    global player_health, max_health, bullet_interval, spawn_interval
+    global player_health, max_health, bullet_interval, spawn_interval, spawn_delay_timer, score
 
     # Configura i buff
     buffs = [
@@ -154,6 +154,11 @@ def level_up_menu():
     # Mostra il menu finché non si sceglie un buff
     while True:
         screen.fill(BLACK)
+
+        # Disegna la scritta "Level Up" in alto al centro
+        level_up_text = font.render("LEVEL UP!", True, WHITE)
+        level_up_rect = level_up_text.get_rect(center=(WINDOW_WIDTH // 2, 100))  # Posiziona in alto
+        screen.blit(level_up_text, level_up_rect)
 
         # Disegna i rettangoli con i nomi dei buff
         for i, rect in enumerate(options_rects):
@@ -176,13 +181,18 @@ def level_up_menu():
                     selected_option = (selected_option + 1) % len(buffs)
                 elif event.key == pygame.K_RETURN:  # Invio per confermare la selezione
                     buffs[selected_option]["action"]()
+                    score += player_health  # Aggiungi gli HP attuali al punteggio
+                    spawn_delay_timer = 0  # Resetta il timer di inattività
+                    spawn_interval = 1200  # Torna al valore iniziale dello spawn interval
                     return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Click sinistro
                 for i, rect in enumerate(options_rects):
                     if rect.collidepoint(event.pos):
                         buffs[i]["action"]()
+                        score += player_health  # Aggiungi gli HP attuali al punteggio
+                        spawn_delay_timer = 0  # Resetta il timer di inattività
+                        spawn_interval = 1200  # Torna al valore iniziale dello spawn interval 
                         return
-    global player_health, max_health, bullet_interval
 
 
 
@@ -235,11 +245,11 @@ while True:
         spawn_delay_timer += clock.get_time() / 1000
         if spawn_delay_timer >= 3:
             time_still += clock.get_time() / 1000
-            spawn_interval = max(1000 - int(time_still * 80), min_spawn_interval)
+            spawn_interval = max(1200 - int(time_still * 80), min_spawn_interval)
     else:
         time_still = 0
         spawn_delay_timer = 0
-        spawn_interval = 1000
+        spawn_interval = 1200
 
     spawn_timer += clock.get_time()
     if spawn_timer > spawn_interval:
@@ -309,6 +319,8 @@ while True:
     if enemies_killed >= 15:
         enemies_killed = 0
         level_up_menu()  # Mostra il menu per la scelta del buff
+        
+        
 
         
     if player_health <= 0:
