@@ -4,16 +4,21 @@ import random
 
 pygame.init()
 
-WINDOW_WIDTH = 800 # Dimensioni della finestra di gioco
-WINDOW_HEIGHT = 600
+background = pygame.image.load("images/floor_wood.jpg")  # Sostituisci con il nome del tuo file
+
+
+WINDOW_WIDTH =  700 # Dimensioni della finestra di gioco
+WINDOW_HEIGHT = 700
+
+
+background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
 
 GREEN = (35, 101, 51)           
 BLACK = (0, 0, 0)               
 RED = (255, 0, 0)               
 WHITE = (255, 255, 255)        
 LIGHT_GREEN = (144, 238, 144)  
-BROWN = (154, 129, 97)   
-GRAY= (20, 20, 20)
+YELLOW = (222, 208, 108)   
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # Imposta la finestra di gioco
 pygame.display.set_caption("arch-circle")
@@ -29,17 +34,28 @@ health_bar_width = 50
 health_bar_height = 5
 player_attack = 1  # Danno del giocatore per colpo
 
-# Impostazioni per i nemici
-enemy_radius = 10
-red_enemy_speed = 1.5  
 spawn_timer = 0
-spawn_interval = 1200  
+spawn_interval = 1000  
 min_spawn_interval = 200  
 spawn_delay_timer = 0
 time_still = 0  
 enemies = []
-blue_enemy_hp = 2  # HP dei nemici blu
-blue_enemy_speed = 1.0  # Velocità dei nemici blu (più lenti dei rossi)
+
+
+#nemici rossi
+red_enemy_speed = 1.5
+enemy_radius = 10 
+
+#nemici blu
+blue_enemy_hp = 2  
+blue_enemy_speed = 1  
+
+#nemici neri
+black_enemy_hp = 5  
+black_enemy_speed = 0.8  
+black_enemy_radius = 15 
+
+ 
 
 
 # Proiettili
@@ -76,10 +92,20 @@ def spawn_enemy():
         x = WINDOW_WIDTH
         y = random.randint(0, WINDOW_HEIGHT)
 
-    if random.random() < 0.05:
+    rand = random.random()
+
+    #10% possibilità di spawn
+    if rand < 0.10:  
         enemies.append({"x": x, "y": y, "type": "blue", "hp": blue_enemy_hp})
+
+    #5% possibilità di spawn
+    elif rand < 0.15:  
+        enemies.append({"x": x, "y": y, "type": "black", "hp": black_enemy_hp})
+    
+    #resto dello spawn 
     else:
         enemies.append({"x": x, "y": y, "type": "red"})
+
 
 def get_closest_enemy():
     if not enemies:
@@ -110,7 +136,7 @@ def game_over_screen():
                 enemies = []
                 bullets = []
                 time_still = 0
-                spawn_interval = 1200
+                spawn_interval = 1000
                 
                 score = 0
                 enemies_killed = 0
@@ -119,7 +145,7 @@ def game_over_screen():
                 
                 return
 
-        screen.fill(BLACK)
+        screen.blit(background, (0, 0))
         game_over_text = font.render("GAME OVER", True, WHITE)
         score_text = font_small.render(f"Score: {score}", True, WHITE)
         restart_text = font_small.render("Press 'R' to Restart", True, WHITE)
@@ -153,7 +179,7 @@ def level_up_menu():
 
     # Mostra il menu finché non si sceglie un buff
     while True:
-        screen.fill(BLACK)
+        screen.blit(background, (0, 0))
 
         # Disegna la scritta "Level Up" in alto al centro
         level_up_text = font.render("LEVEL UP!", True, WHITE)
@@ -162,7 +188,7 @@ def level_up_menu():
 
         # Disegna i rettangoli con i nomi dei buff
         for i, rect in enumerate(options_rects):
-            color = LIGHT_GREEN if i == selected_option else BROWN  # Cambia il colore in base alla selezione
+            color = LIGHT_GREEN if i == selected_option else YELLOW  # Cambia il colore in base alla selezione
             pygame.draw.rect(screen, color, rect)
             buff_text = font_small.render(buffs[i]["name"], True, WHITE)
             text_rect = buff_text.get_rect(center=rect.center)
@@ -183,7 +209,7 @@ def level_up_menu():
                     buffs[selected_option]["action"]()
                     score += player_health  # Aggiungi gli HP attuali al punteggio
                     spawn_delay_timer = 0  # Resetta il timer di inattività
-                    spawn_interval = 1200  # Torna al valore iniziale dello spawn interval
+                    spawn_interval = 1000  # Torna al valore iniziale dello spawn interval
                     return
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Click sinistro
                 for i, rect in enumerate(options_rects):
@@ -191,18 +217,19 @@ def level_up_menu():
                         buffs[i]["action"]()
                         score += player_health  # Aggiungi gli HP attuali al punteggio
                         spawn_delay_timer = 0  # Resetta il timer di inattività
-                        spawn_interval = 1200  # Torna al valore iniziale dello spawn interval 
+                        spawn_interval = 1000  # Torna al valore iniziale dello spawn interval 
                         return
 
 
 
 def heal_player(amount):
     global player_health, max_health
-    player_health = min(max_health, player_health + amount)  # Cura fino al massimo
+    player_health = max_health  # Cura fino al massimo
 
 def increase_max_health(amount):
     global player_health, max_health
     max_health += amount
+    player_health += amount
     
 
 def reduce_bullet_interval(amount):
@@ -245,11 +272,11 @@ while True:
         spawn_delay_timer += clock.get_time() / 1000
         if spawn_delay_timer >= 3:
             time_still += clock.get_time() / 1000
-            spawn_interval = max(1200 - int(time_still * 80), min_spawn_interval)
+            spawn_interval = max(1000 - int(time_still * 80), min_spawn_interval)
     else:
         time_still = 0
         spawn_delay_timer = 0
-        spawn_interval = 1200
+        spawn_interval = 1000
 
     spawn_timer += clock.get_time()
     if spawn_timer > spawn_interval:
@@ -282,7 +309,13 @@ while True:
         dy = circle_y - enemy["y"]
         distance = (dx ** 2 + dy ** 2) ** 0.5
 
-        speed = blue_enemy_speed if enemy["type"] == "blue" else red_enemy_speed
+        if enemy["type"] == "blue":
+            speed = blue_enemy_speed
+        elif enemy["type"] == "black":
+            speed = black_enemy_speed
+        else:
+            speed = red_enemy_speed
+
 
         if distance != 0:
             enemy["x"] += (dx / distance) * speed
@@ -298,22 +331,40 @@ while True:
         hit = False
         for enemy in enemies[:]:
             if check_bullet_collision(bullet, enemy):
-                if enemy["type"] == "blue":
+                if enemy["type"] == "blue" or enemy["type"] == "black":
                     enemy["hp"] -= player_attack
                     if enemy["hp"] <= 0:
+                        if enemy["type"] == "black":
+                            # Quando il nemico nero muore, genera 2 nemici rossi affiancati
+                            offset = enemy_radius + 5  # Distanza tra i due nuovi nemici
+                            enemies.append({"x": enemy["x"] - offset, "y": enemy["y"], "type": "red"})
+                            enemies.append({"x": enemy["x"] + offset, "y": enemy["y"], "type": "red"})
+
+                            score += 9  # Il nemico nero dà più punti
+                            experience += 1
+                            enemies_killed += 1
+                        else:
+                            score += 3  # Il nemico blu dà 3 punti
+                            experience += 1
+                            enemies_killed += 1
                         enemies.remove(enemy)
-                        score += 3
-                        experience += 1
-                        enemies_killed += 1
                 else:
                     enemies.remove(enemy)
                     score += 1
                     experience += 1
                     enemies_killed += 1
+
+
+                
                 hit = True
                 break  # Esci dal loop dopo la prima collisione
         if hit:
             bullets.remove(bullet)
+
+    
+
+
+
 
     # Level Up system
     if enemies_killed >= 15:
@@ -327,12 +378,31 @@ while True:
         game_over_screen()
 
     # Disegno elementi
-    screen.fill(BLACK)
+    screen.blit(background, (0, 0))
+
+    # Disegna il bordo nero (cerchio leggermente più grande)
+    pygame.draw.circle(screen, BLACK, (circle_x, circle_y), default_radius + 2)
+
+    # Disegna il player sopra il bordo
     pygame.draw.circle(screen, GREEN, (circle_x, circle_y), default_radius)
 
+
     for enemy in enemies:
-        color = RED if enemy["type"] == "red" else (0, 0, 255)
-        pygame.draw.circle(screen, color, (int(enemy["x"]), int(enemy["y"])), enemy_radius)
+        if enemy["type"] == "red":
+            color = RED
+            radius = enemy_radius
+        elif enemy["type"] == "blue":
+            color = (0, 0, 255)
+            radius = enemy_radius
+        else:  # Nemico nero
+            color = BLACK
+            radius = black_enemy_radius
+
+        # Disegna il bordo nero e poi il nemico
+        pygame.draw.circle(screen, BLACK, (int(enemy["x"]), int(enemy["y"])), radius + 2)
+        pygame.draw.circle(screen, color, (int(enemy["x"]), int(enemy["y"])), radius)
+
+
 
     for bullet in bullets:
         pygame.draw.circle(screen, WHITE, (int(bullet["x"]), int(bullet["y"])), bullet_radius)
@@ -349,18 +419,17 @@ while True:
 
 
     if show_ui:
-         # Crea una superficie trasparente
+
         ui_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
-        ui_surface.fill(BROWN)
         
         # Posiziona il pannello in alto a sinistra
         screen.blit(ui_surface, (0, 0))  
         
         # Disegna i testi SOPRA il pannello
-        hp_text = font_small.render(f"HP: {player_health}/{max_health}", True, GRAY)
-        exp_text = font_small.render(f"EXP: {experience}", True, GRAY)
-        spawn_text = font_small.render(f"SI: {spawn_interval}", True, GRAY)
-        bullet_text = font_small.render(f"AS: {bullet_interval}", True, GRAY)
+        hp_text = font_small.render(f"HP: {player_health}/{max_health}", True, WHITE)
+        exp_text = font_small.render(f"EXP: {experience}", True, WHITE)
+        spawn_text = font_small.render(f"SI: {spawn_interval}", True, WHITE)
+        bullet_text = font_small.render(f"AS: {bullet_interval}", True, WHITE)
         
         screen.blit(hp_text, (10, 10))    
         screen.blit(exp_text, (10, 50))   
@@ -370,4 +439,3 @@ while True:
     pygame.display.flip()
     clock.tick(60)
 
-#commit day 1 giusto per tenere online la strick
