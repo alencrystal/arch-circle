@@ -440,3 +440,4 @@ while True:
     clock.tick(60)
 
 #eskere
+#puwh2 amogus
