@@ -33,6 +33,9 @@ max_health = 10
 health_bar_width = 50
 health_bar_height = 5
 player_attack = 1  # Danno del giocatore per colpo
+level = 1
+exp_to_next_level = 10 
+
 
 spawn_timer = 0
 spawn_interval = 1000  
@@ -67,7 +70,6 @@ bullets = []
 
 score = 0
 experience = 0
-enemies_killed = 0  
 
 show_ui = False  # Di default, l'interfaccia è nascosta
 
@@ -119,7 +121,7 @@ def check_bullet_collision(bullet, enemy):
     return (dx**2 + dy**2) ** 0.5 < (bullet_radius + enemy_radius)
 
 def game_over_screen():
-    global score, circle_x, circle_y, player_health, max_health, enemies, bullets, time_still, spawn_interval, enemies_killed, experience, bullet_interval
+    global score, circle_x, circle_y, player_health, max_health, enemies, bullets, time_still, spawn_interval, experience, bullet_interval
 
     while True:
         for event in pygame.event.get():
@@ -139,7 +141,6 @@ def game_over_screen():
                 spawn_interval = 1000
                 
                 score = 0
-                enemies_killed = 0
                 bullet_interval = 980
                 experience = 0    
                 
@@ -342,17 +343,17 @@ while True:
 
                             score += 9  # Il nemico nero dà più punti
                             experience += 1
-                            enemies_killed += 1
+                             
                         else:
                             score += 3  # Il nemico blu dà 3 punti
                             experience += 1
-                            enemies_killed += 1
+                             
                         enemies.remove(enemy)
                 else:
                     enemies.remove(enemy)
                     score += 1
                     experience += 1
-                    enemies_killed += 1
+
 
 
                 
@@ -367,9 +368,13 @@ while True:
 
 
     # Level Up system
-    if enemies_killed >= 15:
-        enemies_killed = 0
-        level_up_menu()  # Mostra il menu per la scelta del buff
+    # Level Up system con livello
+    if experience >= exp_to_next_level:
+        experience -= exp_to_next_level
+        level += 1
+        exp_to_next_level = int(exp_to_next_level + level)  # Aumenta la richiesta di esperienza per il prossimo livello
+        level_up_menu()  # Mostra il menu di potenziamento
+
         
         
 
@@ -430,14 +435,21 @@ while True:
         exp_text = font_small.render(f"EXP: {experience}", True, WHITE)
         spawn_text = font_small.render(f"SI: {spawn_interval}", True, WHITE)
         bullet_text = font_small.render(f"AS: {bullet_interval}", True, WHITE)
-        
-        screen.blit(hp_text, (10, 10))    
-        screen.blit(exp_text, (10, 50))   
-        screen.blit(spawn_text, (10, 90)) 
+        level_text = font_small.render(f"LV: {level}", True, WHITE)
+
+
+        screen.blit(hp_text, (10, 10))
+        screen.blit(level_text, (10, 50))    
+        screen.blit(exp_text, (10, 90))  
         screen.blit(bullet_text, (10, 130)) 
+        screen.blit(spawn_text, (10, 170)) 
+         
+        
+
+        
+          
+
 
     pygame.display.flip()
     clock.tick(60)
 
-#eskere
-#puwh2 amogus
