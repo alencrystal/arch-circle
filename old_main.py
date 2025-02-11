@@ -4,14 +4,17 @@ import random
 
 pygame.init()
 
-background = pygame.image.load("images/floor_wood.jpg")  # Sostituisci con il nome del tuo file
 
 
-WINDOW_WIDTH =  700 # Dimensioni della finestra di gioco
+# Dimensioni della finestra di gioco
+WINDOW_WIDTH =  700 
 WINDOW_HEIGHT = 700
 
+#dimensioni immagine di sfondo
+background = pygame.image.load("images/tile_floor_wood.jpg")
+background = pygame.transform.scale(background, (256, 256))
 
-background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+
 
 GREEN = (35, 101, 51)           
 BLACK = (0, 0, 0)               
@@ -78,6 +81,13 @@ font_small = pygame.font.Font("font/Titillium.ttf", 30)
 font = pygame.font.Font("font/Titillium.ttf", 74) # Font per il messaggio di game over
 
 clock = pygame.time.Clock()
+
+# Funzione per disegnare il background ripetuto
+def draw_tiled_background():
+    for x in range(0, WINDOW_WIDTH, 256):
+        for y in range(0, WINDOW_HEIGHT, 256):
+            screen.blit(background, (x, y))
+
 
 def spawn_enemy():
     side = random.choice(["top", "bottom", "left", "right"])
@@ -146,7 +156,7 @@ def game_over_screen():
                 
                 return
 
-        screen.blit(background, (0, 0))
+        draw_tiled_background()
         game_over_text = font.render("GAME OVER", True, WHITE)
         score_text = font_small.render(f"Score: {score}", True, WHITE)
         restart_text = font_small.render("Press 'R' to Restart", True, WHITE)
@@ -180,7 +190,7 @@ def level_up_menu():
 
     # Mostra il menu finché non si sceglie un buff
     while True:
-        screen.blit(background, (0, 0))
+        draw_tiled_background()
 
         # Disegna la scritta "Level Up" in alto al centro
         level_up_text = font.render("LEVEL UP!", True, WHITE)
@@ -383,7 +393,7 @@ while True:
         game_over_screen()
 
     # Disegno elementi
-    screen.blit(background, (0, 0))
+    draw_tiled_background()
 
     # Disegna il bordo nero (cerchio leggermente più grande)
     pygame.draw.circle(screen, BLACK, (circle_x, circle_y), default_radius + 2)
