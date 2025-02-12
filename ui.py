@@ -72,19 +72,15 @@ def draw_level_up_menu(screen, buffs, selected_option):
     return options_rects  # Restituisci i rect per la gestione del click
 
 
-def draw_ui(screen, player, experience, spawn_interval, bullet_interval, level):
+def draw_ui(screen, player, experience, bullet_interval):
     """Disegna tutti gli elementi della UI (se visibile)."""
     ui_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     screen.blit(ui_surface, (0, 0))
 
     hp_text = FONT_SMALL.render(f"HP: {player.health}/{player.max_health}", True, WHITE)
     exp_text = FONT_SMALL.render(f"EXP: {experience}", True, WHITE)
-    spawn_text = FONT_SMALL.render(f"SI: {spawn_interval}", True, WHITE)
     bullet_text = FONT_SMALL.render(f"AS: {bullet_interval}", True, WHITE)
-    level_text = FONT_SMALL.render(f"LV: {level}", True, WHITE)
 
     screen.blit(hp_text, (10, 10))
-    screen.blit(level_text, (10, 50))
-    screen.blit(exp_text, (10, 90))
-    screen.blit(bullet_text, (10, 130))
-    screen.blit(spawn_text, (10, 170))
+    screen.blit(exp_text, (10, 50))
+    screen.blit(bullet_text, (10, 90))

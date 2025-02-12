@@ -21,8 +21,8 @@ class Game:
         self.level = 1
         self.exp_to_next_level = 10
         self.spawn_timer = 0
-        self.spawn_interval = INITIAL_SPAWN_INTERVAL
-        self.min_spawn_interval = MIN_SPAWN_INTERVAL
+        self.spawn_interval = INITIAL_SPAWN_INTERVAL  # Use the fixed spawn interval
+        self.min_spawn_interval = MIN_SPAWN_INTERVAL  # Ensure the minimum spawn interval is also fixed
         self.spawn_delay_timer = 0
         self.time_still = 0
         self.bullet_timer = 0
@@ -32,6 +32,7 @@ class Game:
         self.background = pygame.image.load("assets/images/tile_floor_wood.jpg")
         self.background = pygame.transform.scale(self.background, (256, 256))
         self.game_over = False  # Add game over flag
+        self.enemies_to_spawn = self.exp_to_next_level  # Track the number of enemies to spawn
 
     def handle_input(self):
         """Gestisce l'input dell'utente (tasti, mouse, ecc.)."""
@@ -43,6 +44,8 @@ class Game:
                     self.show_ui = not self.show_ui
                 if event.key == pygame.K_r and self.player.health <= 0:  # Riavvia
                     self.reset_game()
+                if event.key == pygame.K_RETURN and self.enemies_to_spawn == 0 and not self.enemies and self.check_door_collision():
+                    self.level_up()
 
     def update(self):
         """Aggiorna la logica di gioco (movimento, collisioni, ecc.)."""
@@ -51,7 +54,8 @@ class Game:
         self.player.move(keys)
 
         # Spawn nemici
-        self.update_spawn_logic(moving)
+        if self.enemies_to_spawn > 0:
+            self.update_spawn_logic(moving)
 
         # Sparo proiettili
         self.update_bullets(moving)
@@ -62,15 +66,16 @@ class Game:
         # Controllo collisioni proiettili
         self.check_bullet_collisions()
         
-        # Level up
-        self.check_level_up()
+        # Check if all required enemies are defeated and player reaches the door
+        if self.enemies_to_spawn == 0 and not self.enemies:
+            if self.check_door_collision():
+                self.level_up()
 
         # Game over
         if self.player.health <= 0:
             self.game_over = True  # Set game over flag
             draw_game_over_screen(self.screen, self.score, self.level)
             pygame.display.flip()  # Ensure the screen is updated
-            
 
     def draw(self):
         """Disegna tutti gli elementi del gioco."""
@@ -97,12 +102,16 @@ class Game:
 
         # Disegna la UI se visibile
         if self.show_ui:
-            draw_ui(self.screen, self.player, self.experience, self.spawn_interval, self.bullet_interval, self.level)
+            draw_ui(self.screen, self.player, self.experience, self.bullet_interval)
 
         # Disegna la schermata di game over se il gioco è finito
         if self.game_over:
             self.screen.fill(BLACK)  # Clear the screen
             draw_game_over_screen(self.screen, self.score, self.level)
+
+        # Disegna la porta se tutti i nemici richiesti sono stati sconfitti
+        if self.enemies_to_spawn == 0 and not self.enemies:
+            self.draw_door()
 
         pygame.display.flip()
 
@@ -118,20 +127,11 @@ class Game:
 
     def update_spawn_logic(self, moving):
         """Logica per lo spawn dei nemici."""
-        if not moving:
-            self.spawn_delay_timer += self.clock.get_time() / 1000
-            if self.spawn_delay_timer >= 3:
-                self.time_still += self.clock.get_time() / 1000
-                self.spawn_interval = max(1000 - int(self.time_still * 80), self.min_spawn_interval)
-        else:
-            self.time_still = 0
-            self.spawn_delay_timer = 0
-            self.spawn_interval = 1000
-
         self.spawn_timer += self.clock.get_time()
         if self.spawn_timer > self.spawn_interval:
             self.spawn_enemy()
             self.spawn_timer = 0
+            self.enemies_to_spawn -= 1  # Decrement the number of enemies to spawn
 
     def spawn_enemy(self):
         """Genera un nemico casuale."""
@@ -203,7 +203,7 @@ class Game:
         """Verifica se il giocatore deve salire di livello."""
         if self.experience >= self.exp_to_next_level:
             self.experience -= self.exp_to_next_level
-            self.level += 1
+            self.level += 1  # Increment the level
             self.exp_to_next_level = int(self.exp_to_next_level + self.level)
             self.level_up()
 
@@ -251,6 +251,15 @@ class Game:
             # Aggiorna e ridisegna *solo* il menu, non l'intero gioco
             draw_level_up_menu(self.screen, buffs, selected_option)
 
+        # Transport the player to a new room
+        self.player.x = WINDOW_WIDTH // 2
+        self.player.y = WINDOW_HEIGHT // 2
+        self.enemies = []
+        self.spawn_timer = 0
+        self.bullet_timer = 0
+        self.experience = 0
+        self.exp_to_next_level += 10
+        self.enemies_to_spawn = self.exp_to_next_level  # Reset the number of enemies to spawn
 
     def post_level_up(self):
         """Azioni da eseguire dopo la selezione del buff."""
@@ -284,3 +293,21 @@ class Game:
     def increase_score(self, percentage):
         """Aggiunge al punteggio attuale del giocatore un bonus del 5%."""
         self.score += int(self.score * percentage)
+
+    def draw_door(self):
+        """Disegna una porta in alto al centro dello schermo."""
+        door_image = pygame.image.load("assets/images/stairs.png")
+        door_image = pygame.transform.scale(door_image, (50, 50))
+        door_x = (WINDOW_WIDTH - door_image.get_width()) // 2
+        door_y = 0
+        self.screen.blit(door_image, (door_x, door_y))
+
+    def check_door_collision(self):
+        """Controlla se il giocatore ha raggiunto la porta."""
+        door_width = 50
+        door_height = 100
+        door_x = (WINDOW_WIDTH - door_width) // 2
+        door_y = 0
+        player_rect = pygame.Rect(self.player.x - self.player.radius, self.player.y - self.player.radius, self.player.radius * 2, self.player.radius * 2)
+        door_rect = pygame.Rect(door_x, door_y, door_width, door_height)
+        return player_rect.colliderect(door_rect)

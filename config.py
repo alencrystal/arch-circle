@@ -43,6 +43,6 @@ BULLET_RADIUS = 5
 BULLET_SPEED = 7
 
 # Game settings
-INITIAL_SPAWN_INTERVAL = 1000
-MIN_SPAWN_INTERVAL = 200
+INITIAL_SPAWN_INTERVAL = 500  # Set spawn interval to 500 milliseconds
+MIN_SPAWN_INTERVAL = 500  # Ensure the minimum spawn interval is also 500 milliseconds
 INITIAL_BULLET_INTERVAL = 1000
