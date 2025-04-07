@@ -2,11 +2,17 @@
 import pygame
 from config import *
 
-def draw_tiled_background(screen, background_image):
-    """Disegna lo sfondo ripetuto."""
-    for x in range(0, WINDOW_WIDTH, background_image.get_width()):
-        for y in range(0, WINDOW_HEIGHT, background_image.get_height()):
-            screen.blit(background_image, (x, y))
+def draw_tiled_background(screen, background_image, background_name=None):
+    """Disegna lo sfondo ripetuto o scalato."""
+    if background_name in ["tile_floor_grass2.jpg", "tile_floor_brick.jpg"]:
+        # Scala l'immagine per coprire l'intero schermo
+        scaled_background = pygame.transform.scale(background_image, (WINDOW_WIDTH, WINDOW_HEIGHT))
+        screen.blit(scaled_background, (0, 0))
+    else:
+        # Ripeti l'immagine come sfondo
+        for x in range(0, WINDOW_WIDTH, background_image.get_width()):
+            for y in range(0, WINDOW_HEIGHT, background_image.get_height()):
+                screen.blit(background_image, (x, y))
 
 def draw_score(screen, score):
     """Disegna il punteggio."""

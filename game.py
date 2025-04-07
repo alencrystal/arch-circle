@@ -2,6 +2,7 @@
 import pygame
 import sys
 import random
+import os  # Add import for os
 from config import *
 from player import Player
 from enemy import RedEnemy, BlueEnemy, BlackEnemy
@@ -29,10 +30,24 @@ class Game:
         self.bullet_interval = INITIAL_BULLET_INTERVAL
         self.running = True
         self.show_ui = False
-        self.background = pygame.image.load("assets/images/tile_floor_grass.jpg")
-        self.background = pygame.transform.scale(self.background, (256, 256))
+        self.background_names = []  # Store the names of the background images
+        self.background_images, self.background_names = self.load_background_images("assets/images/floor")
+        self.background = random.choice(self.background_images)  # Randomly select the initial background
+        self.background_name = self.background_names[self.background_images.index(self.background)]
         self.game_over = False  # Add game over flag
         self.enemies_to_spawn = self.exp_to_next_level  # Track the number of enemies to spawn
+
+    def load_background_images(self, folder_path):
+        """Carica tutte le immagini di sfondo dalla cartella specificata."""
+        images = []
+        names = []
+        for filename in os.listdir(folder_path):
+            if filename.endswith(".jpg") or filename.endswith(".png"):
+                image = pygame.image.load(os.path.join(folder_path, filename))
+                image = pygame.transform.scale(image, (256, 256))
+                images.append(image)
+                names.append(filename)
+        return images, names
 
     def handle_input(self):
         """Gestisce l'input dell'utente (tasti, mouse, ecc.)."""
@@ -84,7 +99,7 @@ class Game:
         # offset_y = min(max(self.player.y - WINDOW_HEIGHT // 2, 0), MAP_HEIGHT - WINDOW_HEIGHT)
 
         # Disegna lo sfondo
-        draw_tiled_background(self.screen, self.background)
+        draw_tiled_background(self.screen, self.background, self.background_name)
 
         # Disegna il giocatore
         self.player.draw(self.screen, 0, 0)
@@ -260,6 +275,8 @@ class Game:
         self.experience = 0
         self.exp_to_next_level += 10
         self.enemies_to_spawn = self.exp_to_next_level  # Reset the number of enemies to spawn
+        self.background = random.choice(self.background_images)  # Change the background
+        self.background_name = self.background_names[self.background_images.index(self.background)]
 
     def post_level_up(self):
         """Azioni da eseguire dopo la selezione del buff."""
@@ -304,8 +321,8 @@ class Game:
 
     def check_door_collision(self):
         """Controlla se il giocatore ha raggiunto la porta."""
-        door_width = 50
-        door_height = 100
+        door_width = 40
+        door_height = 40
         door_x = (WINDOW_WIDTH - door_width) // 2
         door_y = 0
         player_rect = pygame.Rect(self.player.x - self.player.radius, self.player.y - self.player.radius, self.player.radius * 2, self.player.radius * 2)
