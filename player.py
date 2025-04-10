@@ -41,7 +41,8 @@ class Player:
         """Disegna il giocatore e la barra della vita."""
         screen_x = self.x - self.radius  # Adjust for image centering
         screen_y = self.y - self.radius  # Adjust for image centering
-        screen.blit(self.image, (screen_x, screen_y))  # Draw the character image
+        # Usa lo sprite aggiornato dall'animazione invece dell'immagine statica
+        screen.blit(self.sprite, (screen_x, screen_y))  # Draw the current sprite
 
         # Barra della vita
         health_ratio = self.health / self.max_health
@@ -73,7 +74,9 @@ class Player:
 
     def is_moving(self):
         """Controlla se il player si sta muovendo."""
-        return self.velocity_x != 0 or self.velocity_y != 0
+        # Controlla se il giocatore si sta muovendo in base alla velocità o ai tasti premuti
+        keys = pygame.key.get_pressed()
+        return keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_UP] or keys[pygame.K_DOWN]
 
     def update(self, delta_time):
         """Aggiorna lo stato del giocatore."""

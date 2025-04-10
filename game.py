@@ -92,6 +92,14 @@ class Game:
             draw_game_over_screen(self.screen, self.score, self.level)
             pygame.display.flip()  # Ensure the screen is updated
 
+        # Aggiorna l'animazione del giocatore
+        self.player.update(self.clock.get_time() / 1000.0)
+
+        # Debug: verifica lo stato del giocatore e dell'animazione
+        print(f"Player position: ({self.player.x}, {self.player.y})")
+        print(f"Player is moving: {self.player.is_moving()}")
+        print(f"Current animation frame: {self.player.animation.current_sprite_index}")
+
     def draw(self):
         """Disegna tutti gli elementi del gioco."""
         # Rimuovi il calcolo dell'offset
